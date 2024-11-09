@@ -2,7 +2,9 @@ package metrics
 
 import (
 	"bytes"
+	"fmt"
 	"math"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -91,4 +93,109 @@ prefix_count 123
 	if !strings.Contains(result, name) {
 		t.Fatalf("missing histogram %s in the WritePrometheus output; got\n%s", name, result)
 	}
+}
+
+func TestHistogramStaticConcurrent(t *testing.T) {
+	name := "HistogramStaticConcurrent"
+	h := NewHistogramStatic(name, []float64{0.6813, 0.7743, 0.8799, 1, 1.136, 1.292, 1.468})
+	err := testConcurrent(func() error {
+		for f := 0.6; f < 1.6; f += 0.1 {
+			h.Update(f)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	testMarshalTo(t, h, "prefix", `prefix_bucket{le="6.813e-01"} 5
+prefix_bucket{le="7.743e-01"} 10
+prefix_bucket{le="8.799e-01"} 15
+prefix_bucket{le="1.000e+00"} 25
+prefix_bucket{le="1.136e+00"} 30
+prefix_bucket{le="1.292e+00"} 35
+prefix_bucket{le="1.468e+00"} 45
+prefix_bucket{le="+Inf"} 50
+prefix_sum 52.5
+prefix_count 50
+`)
+
+	var labels []string
+	var counts []uint64
+	h.VisitBuckets(func(label string, count uint64) {
+		labels = append(labels, label)
+		counts = append(counts, count)
+	})
+	labelsExpected := []string{
+		"6.813e-01",
+		"7.743e-01",
+		"8.799e-01",
+		"1.000e+00",
+		"1.136e+00",
+		"1.292e+00",
+		"1.468e+00",
+		"+Inf",
+	}
+	if !reflect.DeepEqual(labels, labelsExpected) {
+		t.Fatalf("unexpected labels; got %v; want %v", labels, labelsExpected)
+	}
+	countsExpected := []uint64{5, 5, 5, 10, 5, 5, 10, 5}
+	if !reflect.DeepEqual(counts, countsExpected) {
+		t.Fatalf("unexpected counts; got %v; want %v", counts, countsExpected)
+	}
+}
+
+func TestHistogramStaticWithTags(t *testing.T) {
+	name := `TestHistogramStatic{tag="foo"}`
+	h := NewHistogramStatic(name, []float64{})
+	h.Update(123)
+
+	var bb bytes.Buffer
+	WritePrometheus(&bb, false)
+	result := bb.String()
+	namePrefixWithTag := `TestHistogramStatic_bucket{tag="foo",le="+Inf"} 1` + "\n"
+	if !strings.Contains(result, namePrefixWithTag) {
+		t.Fatalf("missing histogram %s in the WritePrometheus output; got\n%s", namePrefixWithTag, result)
+	}
+}
+
+func TestGetOrCreateHistogramStaticSerial(t *testing.T) {
+	name := "GetOrCreateHistogramStaticSerial"
+	if err := testGetOrCreateHistogramStatic(name); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGetOrCreateHistogramStaticConcurrent(t *testing.T) {
+	name := "GetOrCreateHistogramStaticConcurrent"
+	err := testConcurrent(func() error {
+		return testGetOrCreateHistogramStatic(name)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestHistogramStaticInvalidBuckets(t *testing.T) {
+	name := "HistogramStaticInvalidBuckets"
+	expectPanic(t, name, func() {
+		NewHistogramStatic(name, []float64{123, -234})
+	})
+}
+
+func TestGetOrCreateHistogramStaticInvalidBuckets(t *testing.T) {
+	name := "GetOrCreateHistogramStaticInvalidBuckets"
+	expectPanic(t, name, func() {
+		GetOrCreateHistogramStatic(name, []float64{123, -234})
+	})
+}
+
+func testGetOrCreateHistogramStatic(name string) error {
+	h1 := GetOrCreateHistogramStatic(name, []float64{1})
+	for i := 0; i < 10; i++ {
+		h2 := GetOrCreateHistogramStatic(name, []float64{1})
+		if h1 != h2 {
+			return fmt.Errorf("unexpected histogram returned; got %p; want %p", h2, h1)
+		}
+	}
+	return nil
 }
