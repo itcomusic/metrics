@@ -97,6 +97,7 @@ func TestUnregisterAllMetrics(t *testing.T) {
 			_ = NewCounter(fmt.Sprintf("counter_%d", i))
 			_ = NewSummary(fmt.Sprintf("summary_%d", i))
 			_ = NewHistogram(fmt.Sprintf("histogram_%d", i))
+			_ = NewHistogramStatic(fmt.Sprintf("histogram_static_%d", i), nil)
 			_ = NewGauge(fmt.Sprintf("gauge_%d", i), func() float64 { return 0 })
 		}
 		if mns := ListMetricNames(); len(mns) == 0 {
@@ -167,6 +168,7 @@ func TestInvalidName(t *testing.T) {
 		expectPanic(t, fmt.Sprintf("GetOrCreateGauge(%q)", name), func() { GetOrCreateGauge(name, func() float64 { return 0 }) })
 		expectPanic(t, fmt.Sprintf("GetOrCreateSummary(%q)", name), func() { GetOrCreateSummary(name) })
 		expectPanic(t, fmt.Sprintf("GetOrCreateHistogram(%q)", name), func() { GetOrCreateHistogram(name) })
+		expectPanic(t, fmt.Sprintf("GetOrCreateHistogramStatic(%q)", name), func() { GetOrCreateHistogramStatic(name, nil) })
 	}
 	f("")
 	f("foo{")
@@ -201,6 +203,11 @@ func TestDoubleRegister(t *testing.T) {
 		NewHistogram(name)
 		expectPanic(t, name, func() { NewSummary(name) })
 	})
+	t.Run("NewHistogramStatic", func(t *testing.T) {
+		name := "NewHistogramStaticDoubleRegister"
+		NewHistogramStatic(name, nil)
+		expectPanic(t, name, func() { NewHistogramStatic(name, nil) })
+	})
 }
 
 func TestGetOrCreateNotCounter(t *testing.T) {
@@ -225,6 +232,12 @@ func TestGetOrCreateNotHistogram(t *testing.T) {
 	name := "GetOrCreateNotHistogram"
 	NewCounter(name)
 	expectPanic(t, name, func() { GetOrCreateHistogram(name) })
+}
+
+func TestGetOrCreateNotHistogramStatic(t *testing.T) {
+	name := "GetOrCreateNotHistogramStatic"
+	NewCounter(name)
+	expectPanic(t, name, func() { GetOrCreateHistogramStatic(name, nil) })
 }
 
 func TestWritePrometheusSerial(t *testing.T) {

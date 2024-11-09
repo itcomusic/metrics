@@ -86,6 +86,31 @@ func (s *Set) NewHistogram(name string) *Histogram {
 	return h
 }
 
+// NewHistogramStatic creates and returns new histogram in s with the given name and buckets.
+//
+// name must be valid Prometheus-compatible metric with possible labels.
+// For instance,
+//
+//   - foo
+//   - foo{bar="baz"}
+//   - foo{bar="baz",aaa="b"}
+//
+// The returned histogram is safe to use from concurrent goroutines.
+func (s *Set) NewHistogramStatic(name string, buckets []float64) *HistogramStatic {
+	if err := validateUpperBoundBuckets(buckets); err != nil {
+		panic(fmt.Errorf("BUG: invalid buckets for histogram %q: %s", name, err))
+	}
+
+	b := make([]leBucket, len(buckets))
+	for i, v := range buckets {
+		b[i] = leBucket{le: v}
+	}
+
+	h := &HistogramStatic{buckets: b}
+	s.registerMetric(name, h)
+	return h
+}
+
 // GetOrCreateHistogram returns registered histogram in s with the given name
 // or creates new histogram if s doesn't contain histogram with the given name.
 //
@@ -122,6 +147,45 @@ func (s *Set) GetOrCreateHistogram(name string) *Histogram {
 		s.mu.Unlock()
 	}
 	h, ok := nm.metric.(*Histogram)
+	if !ok {
+		panic(fmt.Errorf("BUG: metric %q isn't a Histogram. It is %T", name, nm.metric))
+	}
+	return h
+}
+
+func (s *Set) GetOrCreateStaticHistogram(name string, buckets []float64) *HistogramStatic {
+	s.mu.Lock()
+	nm := s.m[name]
+	s.mu.Unlock()
+	if nm == nil {
+		// Slow path - create and register missing histogram.
+		if err := validateMetric(name); err != nil {
+			panic(fmt.Errorf("BUG: invalid metric name %q: %s", name, err))
+		}
+
+		if err := validateUpperBoundBuckets(buckets); err != nil {
+			panic(fmt.Errorf("BUG: invalid buckets for histogram %q: %s", name, err))
+		}
+
+		b := make([]leBucket, len(buckets))
+		for i, v := range buckets {
+			b[i] = leBucket{le: v}
+		}
+
+		nmNew := &namedMetric{
+			name:   name,
+			metric: &HistogramStatic{buckets: b},
+		}
+		s.mu.Lock()
+		nm = s.m[name]
+		if nm == nil {
+			nm = nmNew
+			s.m[name] = nm
+			s.a = append(s.a, nm)
+		}
+		s.mu.Unlock()
+	}
+	h, ok := nm.metric.(*HistogramStatic)
 	if !ok {
 		panic(fmt.Errorf("BUG: metric %q isn't a Histogram. It is %T", name, nm.metric))
 	}

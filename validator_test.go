@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"math"
 	"testing"
 )
 
@@ -58,4 +59,17 @@ func TestValidateMetricError(t *testing.T) {
 	f(`a{foo="bar", x=`)
 	f(`a{foo="bar", x="`)
 	f(`a{foo="bar", x="}`)
+}
+
+func TestValidateUpperBoundBucketsError(t *testing.T) {
+	f := func(b []float64) {
+		t.Helper()
+		if err := validateUpperBoundBuckets(b); err == nil {
+			t.Fatalf("expecting non-nil error when validating %v", b)
+		}
+	}
+	f([]float64{-1})
+	f([]float64{math.NaN()})
+	f([]float64{1, 0})
+	f([]float64{1, 1})
 }
