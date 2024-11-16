@@ -99,10 +99,10 @@ func writeIOMetrics(w io.Writer) {
 	data, err := ioutil.ReadFile(ioFilepath)
 	if err != nil {
 		// Do not spam the logs with errors - this error cannot be fixed without process restart.
-		// See https://github.com/VictoriaMetrics/metrics/issues/42
+		// See https://github.com/itcomusic/metrics/issues/42
 		if atomic.CompareAndSwapUint32(&procSelfIOErrLogged, 0, 1) {
 			log.Printf("ERROR: metrics: cannot read process_io_* metrics from %q, so these metrics won't be updated until the error is fixed; "+
-				"see https://github.com/VictoriaMetrics/metrics/issues/42 ; The error: %s", ioFilepath, err)
+				"see https://github.com/itcomusic/metrics/issues/42 ; The error: %s", ioFilepath, err)
 		}
 	}
 

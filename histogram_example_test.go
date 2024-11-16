@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/VictoriaMetrics/metrics"
+	"github.com/itcomusic/metrics"
 )
 
 func ExampleHistogram() {

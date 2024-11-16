@@ -36,7 +36,7 @@ func initSupportedRuntimeMetrics(rms [][2]string) [][2]string {
 		if _, ok := exposedMetrics[metricName]; ok {
 			supportedMetrics = append(supportedMetrics, rm)
 		} else {
-			log.Printf("github.com/VictoriaMetrics/metrics: do not expose %s metric, since the corresponding metric %s isn't supported in the current Go runtime", rm[1], metricName)
+			log.Printf("github.com/itcomusic/metrics: do not expose %s metric, since the corresponding metric %s isn't supported in the current Go runtime", rm[1], metricName)
 		}
 	}
 	return supportedMetrics
