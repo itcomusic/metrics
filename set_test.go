@@ -33,6 +33,10 @@ func TestNewSet(t *testing.T) {
 			if h == nil {
 				t.Fatalf("NewHistogram returned nil")
 			}
+			hs := s.NewHistogramStatic(fmt.Sprintf("histogram_static_%d", j), nil)
+			if hs == nil {
+				t.Fatalf("NewHistogramStatic returned nil")
+			}
 		}
 	}
 }
@@ -72,8 +76,9 @@ func TestSetUnregisterAllMetrics(t *testing.T) {
 			_ = s.NewCounter(fmt.Sprintf("counter_%d", i))
 			_ = s.NewSummary(fmt.Sprintf("summary_%d", i))
 			_ = s.NewHistogram(fmt.Sprintf("histogram_%d", i))
+			_ = s.NewHistogramStatic(fmt.Sprintf("histogram_static_%d", i), nil)
 			_ = s.NewGauge(fmt.Sprintf("gauge_%d", i), func() float64 { return 0 })
-			expectedMetricsCount += 4
+			expectedMetricsCount += 5
 		}
 		if mns := s.ListMetricNames(); len(mns) != expectedMetricsCount {
 			t.Fatalf("unexpected number of metric names on iteration %d; got %d; want %d;\nmetric names:\n%q", j, len(mns), expectedMetricsCount, mns)
@@ -158,6 +163,10 @@ func TestRegisterUnregister(t *testing.T) {
 				histogram := fmt.Sprintf(`histogram{iteration="%d"}`, iteration)
 				GetOrCreateHistogram(histogram).UpdateDuration(now)
 				UnregisterMetric(histogram)
+
+				histogramStatic := fmt.Sprintf(`histogram_static{iteration="%d"}`, iteration)
+				GetOrCreateHistogramStatic(histogramStatic, nil).Update(float64(i))
+				UnregisterMetric(histogramStatic)
 
 				gauge := fmt.Sprintf(`gauge{iteration="%d"}`, iteration)
 				GetOrCreateGauge(gauge, func() float64 { return 1 })

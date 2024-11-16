@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"fmt"
+	"math"
 	"regexp"
 	"strings"
 )
@@ -77,6 +78,21 @@ func skipSpace(s string) string {
 func validateIdent(s string) error {
 	if !identRegexp.MatchString(s) {
 		return fmt.Errorf("invalid identifier %q", s)
+	}
+	return nil
+}
+
+func validateUpperBoundBuckets(buckets []float64) error {
+	for i, v := range buckets {
+		if math.IsNaN(v) || v < 0 {
+			return fmt.Errorf("buckets must be non-negative and not NaN: %f", buckets[i])
+		}
+
+		if i < len(buckets)-1 {
+			if v >= buckets[i+1] {
+				return fmt.Errorf("buckets must be sorted in increasing order: %f >= %f", buckets[i], buckets[i+1])
+			}
+		}
 	}
 	return nil
 }
