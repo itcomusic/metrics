@@ -1,6 +1,6 @@
-[![Build Status](https://github.com/itcomusic/metrics/workflows/main/badge.svg)](https://github.com/VictoriaMetrics/metrics/actions)
-[![GoDoc](https://godoc.org/github.com/itcomusic/metrics?status.svg)](http://godoc.org/github.com/VictoriaMetrics/metrics)
-[![codecov](https://codecov.io/gh/itcomusic/metrics/branch/master/graph/badge.svg)](https://codecov.io/gh/VictoriaMetrics/metrics)
+[![Build Status](https://github.com/itcomusic/metrics/workflows/main/badge.svg)](https://github.com/itcomusic/metrics/actions)
+[![GoDoc](https://godoc.org/github.com/itcomusic/metrics?status.svg)](http://godoc.org/github.com/itcomusic/metrics)
+[![codecov](https://codecov.io/gh/itcomusic/metrics/branch/master/graph/badge.svg)](https://codecov.io/gh/itcomusic/metrics)
 
 
 # metrics - lightweight package for exporting metrics in Prometheus format
