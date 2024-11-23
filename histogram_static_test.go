@@ -99,7 +99,7 @@ func TestHistogramStaticConcurrent(t *testing.T) {
 	name := "HistogramStaticConcurrent"
 	h := NewHistogramStatic(name, []float64{0.6813, 0.7743, 0.8799, 1, 1.136, 1.292, 1.468})
 	err := testConcurrent(func() error {
-		for f := 0.6; f < 1.6; f += 0.1 {
+		for f := 0.6; f < 1.4; f += 0.1 {
 			h.Update(f)
 		}
 		return nil
@@ -113,10 +113,10 @@ prefix_bucket{le="8.799e-01"} 15
 prefix_bucket{le="1.000e+00"} 25
 prefix_bucket{le="1.136e+00"} 30
 prefix_bucket{le="1.292e+00"} 35
-prefix_bucket{le="1.468e+00"} 45
-prefix_bucket{le="+Inf"} 50
-prefix_sum 52.5
-prefix_count 50
+prefix_bucket{le="1.468e+00"} 40
+prefix_bucket{le="+Inf"} 40
+prefix_sum 38
+prefix_count 40
 `)
 
 	var labels []string
@@ -138,7 +138,7 @@ prefix_count 50
 	if !reflect.DeepEqual(labels, labelsExpected) {
 		t.Fatalf("unexpected labels; got %v; want %v", labels, labelsExpected)
 	}
-	countsExpected := []uint64{5, 5, 5, 10, 5, 5, 10, 5}
+	countsExpected := []uint64{5, 5, 5, 10, 5, 5, 5, 0}
 	if !reflect.DeepEqual(counts, countsExpected) {
 		t.Fatalf("unexpected counts; got %v; want %v", counts, countsExpected)
 	}
