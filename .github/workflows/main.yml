@@ -17,8 +17,8 @@ jobs:
         uses: actions/checkout@v1
       - name: Test
         run: |
-          go test -v ./... -coverprofile=coverage.txt -covermode=atomic
-          GOARCH=386 go test ./... -coverprofile=coverage.txt -covermode=atomic
+          go test -v ./... -coverprofile=profile.cov -covermode=atomic
+          GOARCH=386 go test ./... -coverprofile=profile.cov -covermode=atomic
           go test -v ./... -race
       - name: Build
         run: |
@@ -28,8 +28,9 @@ jobs:
           GOOS=windows go build
           GOARCH=386 go build
       - name: Publish coverage
-        uses: codecov/codecov-action@v1.0.6
-        with:
-          token: ${{secrets.CODECOV_TOKEN}}
-          file: ./coverage.txt
+        run: |
+          go install github.com/mattn/goveralls@latest
+          goveralls -service="github" -coverprofile=$GITHUB_WORKSPACE/profile.cov
+        env:
+          COVERALLS_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
