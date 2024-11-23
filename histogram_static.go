@@ -199,7 +199,7 @@ func NewHistogramStatic(name string, buckets []float64) *HistogramStatic {
 //
 // Performance tip: prefer NewHistogramStatic instead of GetOrCreateHistogramStatic.
 func GetOrCreateHistogramStatic(name string, buckets []float64) *HistogramStatic {
-	return defaultSet.GetOrCreateStaticHistogram(name, buckets)
+	return defaultSet.GetOrCreateHistogramStatic(name, buckets)
 }
 
 // UpdateDuration updates request duration based on the given startTime.

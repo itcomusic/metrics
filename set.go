@@ -153,7 +153,7 @@ func (s *Set) GetOrCreateHistogram(name string) *Histogram {
 	return h
 }
 
-func (s *Set) GetOrCreateStaticHistogram(name string, buckets []float64) *HistogramStatic {
+func (s *Set) GetOrCreateHistogramStatic(name string, buckets []float64) *HistogramStatic {
 	s.mu.Lock()
 	nm := s.m[name]
 	s.mu.Unlock()
