@@ -5,6 +5,6 @@
 
 # metrics - lightweight package for exporting metrics in Prometheus format
 
-* current package has not modified original code
+* current package has not modified [original](https://github.com/VictoriaMetrics/metrics/releases/tag/v1.35.1) (v1.35.1)
 * add compatibility Prometheus histograms, `metrics.NewHistogramStatic`
 * add ability pre-define buckets `metrics.DefBuckets`, `metrics.LinearBuckets`, `metrics.ExponentialBuckets`, `metrics.ExponentialBucketsRange`
